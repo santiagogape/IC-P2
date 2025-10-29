@@ -15,6 +15,26 @@
   - us: este comando debe proporcionar la relación de sensores de ultrasonidos disponibles en el dispositivo sensor. 
 
 */
+
+
+/*
+  char name[8];
+  uint8_t id; 1-9
+*/
+typedef struct {
+  char name[9];
+  uint8_t id;
+} Argument;
+
+/*
+  uint8_t code: 1 byte = command code + device id
+  uint16_t param: 0-65535
+*/
+typedef struct {
+  uint8_t code;
+  uint16_t param;
+} Message;
+
 /*
 
 byte = 0000 
@@ -53,15 +73,11 @@ uint8_t hexToDeviceId(uint8_t hex){
   return (hex - DEV_MIN)>>1;
 }
 
+bool equalMessages(Message self, Message other){
+  return self.code == other.code && self.param == other.param;
+}
+const Message empty_message = {0,0};
 
-/*
-  char name[8];
-  uint8_t id; 1-9
-*/
-typedef struct {
-  char name[9];
-  uint8_t id;
-} Argument;
 
 #define HELP "help"
 #define COM_NUM 7
@@ -91,17 +107,19 @@ void setup() {
 }
 
 //blocking
-void CLI(){
+Message CLI(){
   if (SerialUSB.available() > 0 ){
     String message = SerialUSB.readStringUntil('\n');
     message.trim();
     SerialUSB.print("leido: "); SerialUSB.println(message);
 
-    parseCommand(message);
+    return parseCommand(message);
   }
+
+  return empty_message;
 }
 
-void parseCommand(String message) {
+Message parseCommand(String message) {
   char buf[18]; // el comando mas largo es CYCLE,65535. 18 basta para esto
   message.toCharArray(buf, sizeof(buf));
   char *token = strtok(buf, " ");
@@ -114,12 +132,12 @@ void parseCommand(String message) {
   }
 
   // Llamamos al procesador con los tokens
-  processCommand(argc, argv);
+  return processCommand(argc, argv);
 }
 
 
-void processCommand(uint8_t argc, char *argv[]) {
-  if (argc == 0) return;
+Message processCommand(uint8_t argc, char *argv[]) {
+  if (argc == 0) return empty_message;
 
   String cmd = argv[0];
   Argument command_type = empty_arg;
@@ -133,7 +151,7 @@ void processCommand(uint8_t argc, char *argv[]) {
     SerialUSB.println(F("us <HEX:0x--> unit <LITERAL:inc|cm|ms>"));
     SerialUSB.println(F("us <HEX:0x--> delay <INT:max 65535>"));
     SerialUSB.println(F("us <HEX:0x--> status"));
-    return;
+    return empty_message;
   }
   else if (cmd == "us") {
     
@@ -142,16 +160,16 @@ void processCommand(uint8_t argc, char *argv[]) {
       command_type = commands[0];
     } else if (argc == 2) {
       SerialUSB.println(F("Comando 'us' no necesita HEX."));
-      return;
+      return empty_message;
     } else if (argc > 4) {
       SerialUSB.println(F("Mal comando, muchos argumentos."));
-      return;
+      return empty_message;
     }
 
     // ---- Argumento 1: dirección hexadecimal ----
     if (!isHex(argv[1])) {
       SerialUSB.println(F("Error: direccion debe ser hexadecimal (ej: 0xFF)"));
-      return;
+      return empty_message;
     }
     SerialUSB.println(argv[1]);
     SerialUSB.println(parseHex(argv[1]), HEX);
@@ -197,25 +215,24 @@ void processCommand(uint8_t argc, char *argv[]) {
   else {
     SerialUSB.print(F("Comando desconocido: "));
     SerialUSB.println(cmd);
-    return;
+    return empty_message;
   }
 
-  if (command_type.id >0){
-    SerialUSB.println(command_type.id<<4, BIN);
-    SerialUSB.println(device, HEX);
-    SerialUSB.print(commadOffset(command_type.id), HEX);SerialUSB.print(" ");SerialUSB.println(device, HEX);
-    uint8_t code = commadOffset(command_type.id) + device;
-    SerialUSB.print(F("code for command+device: "));SerialUSB.print(code);SerialUSB.print(" HEX: ");SerialUSB.println(code, HEX);
-    SerialUSB.print(F("from id: "));SerialUSB.print(code>>4);
-    SerialUSB.print(F(" and dev: "));SerialUSB.println(DeviceIdToHex( code & DEV_MASC) , HEX);
-    SerialUSB.println(code & DEV_MASC, BIN);
-    uint16_t param = 0;
-    if (command_type.id == 2 || command_type.id == 7){
-      param = num;
-      SerialUSB.println(param);SerialUSB.println(param,HEX);
-    }
-
+  SerialUSB.println(command_type.id<<4, BIN);
+  SerialUSB.println(device, HEX);
+  SerialUSB.print(commadOffset(command_type.id), HEX);SerialUSB.print(" ");SerialUSB.println(device, HEX);
+  uint8_t code = commadOffset(command_type.id) + device;
+  SerialUSB.print(F("code for command+device: "));SerialUSB.print(code);SerialUSB.print(" HEX: ");SerialUSB.println(code, HEX);
+  SerialUSB.print(F("from id: "));SerialUSB.print(code>>4);
+  SerialUSB.print(F(" and dev: "));SerialUSB.println(DeviceIdToHex( code & DEV_MASC) , HEX);
+  SerialUSB.println(code & DEV_MASC, BIN);
+  uint16_t param = 0;
+  if (command_type.id == 2 || command_type.id == 7){
+    param = num;
+    SerialUSB.println(param);SerialUSB.println(param,HEX);
   }
+
+  return (Message){code,param};
 
 }
 
@@ -241,5 +258,8 @@ uint16_t parseInt(char *num){
 void loop() {
   // put your main code here, to run repeatedly:
   //readLine();
-  CLI();
+  Message command = CLI();
+  if (!equalMessages(command, empty_message)){
+    SerialUSB.print("readed Message: code[");SerialUSB.print(command.code);SerialUSB.print("] param[");SerialUSB.print(command.param);SerialUSB.println("]");
+  }
 }
