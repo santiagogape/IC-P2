@@ -45,8 +45,8 @@ examples:
 #define UNIT_COM 4
 #define MAX_ARGS 4
 
-uint16_t DeviceIdToHex(uint8_t offset){
-  return DEV_MIN + offset<<1;
+uint8_t DeviceIdToHex(uint8_t offset){
+  return DEV_MIN + (offset<<1);
 }
 
 uint8_t hexToDeviceId(uint8_t hex){
@@ -122,7 +122,9 @@ void processCommand(uint8_t argc, char *argv[]) {
   if (argc == 0) return;
 
   String cmd = argv[0];
-
+  Argument command_type = empty_arg;
+  uint8_t device;
+  uint16_t num = 0;
   if (cmd == HELP) {
     SerialUSB.println(F("Comandos disponibles:"));
     SerialUSB.println(F("us <HEX:0x--> one-shot"));
@@ -133,11 +135,11 @@ void processCommand(uint8_t argc, char *argv[]) {
     SerialUSB.println(F("us <HEX:0x--> status"));
     return;
   }
-
   else if (cmd == "us") {
+    
     if (argc == 1) {
       SerialUSB.println(F("us: Comando sin implementar."));
-      return;
+      command_type = commands[0];
     } else if (argc == 2) {
       SerialUSB.println(F("Comando 'us' no necesita HEX."));
       return;
@@ -151,9 +153,11 @@ void processCommand(uint8_t argc, char *argv[]) {
       SerialUSB.println(F("Error: direccion debe ser hexadecimal (ej: 0xFF)"));
       return;
     }
-    uint8_t device = hexToDeviceId(parseHex(argv[1]));
+    SerialUSB.println(argv[1]);
+    SerialUSB.println(parseHex(argv[1]), HEX);
+    device = hexToDeviceId(parseHex(argv[1]));
     SerialUSB.println(device);
-    Argument command_type = empty_arg;
+    
 
     // ---- Comandos secundarios ----
     for (uint8_t i =1; i<COM_NUM; i++){
@@ -167,6 +171,7 @@ void processCommand(uint8_t argc, char *argv[]) {
     else if (command_type.id == 2 && argc == 4 && isNumber(argv[3])) {
       SerialUSB.print(F("cycle ")); SerialUSB.print(device, HEX);
       SerialUSB.print(F(" on ")); SerialUSB.println(argv[3]);
+      num = parseInt(argv[3]);
     }
     else if (command_type.id == 3) {
       SerialUSB.print(F("Apagar ")); SerialUSB.println(device, HEX);
@@ -180,6 +185,7 @@ void processCommand(uint8_t argc, char *argv[]) {
     }
     else if (command_type.id == 7 && argc == 4 && isNumber(argv[3])) {
       SerialUSB.print(F("Delay = ")); SerialUSB.println(argv[3]);
+      num = parseInt(argv[3]);
     }
     else if (command_type.id == 8) {
       SerialUSB.print(F("Status ")); SerialUSB.println(device, HEX);
@@ -191,7 +197,26 @@ void processCommand(uint8_t argc, char *argv[]) {
   else {
     SerialUSB.print(F("Comando desconocido: "));
     SerialUSB.println(cmd);
+    return;
   }
+
+  if (command_type.id >0){
+    SerialUSB.println(command_type.id<<4, BIN);
+    SerialUSB.println(device, HEX);
+    SerialUSB.print(commadOffset(command_type.id), HEX);SerialUSB.print(" ");SerialUSB.println(device, HEX);
+    uint8_t code = commadOffset(command_type.id) + device;
+    SerialUSB.print(F("code for command+device: "));SerialUSB.print(code);SerialUSB.print(" HEX: ");SerialUSB.println(code, HEX);
+    SerialUSB.print(F("from id: "));SerialUSB.print(code>>4);
+    SerialUSB.print(F(" and dev: "));SerialUSB.println(DeviceIdToHex( code & DEV_MASC) , HEX);
+    SerialUSB.println(code & DEV_MASC, BIN);
+    uint16_t param = 0;
+    if (command_type.id == 2 || command_type.id == 7){
+      param = num;
+      SerialUSB.println(param);SerialUSB.println(param,HEX);
+    }
+
+  }
+
 }
 
 bool isHex(const char *s) {
