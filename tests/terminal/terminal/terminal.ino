@@ -94,7 +94,10 @@ uint16_t commadOffset(uint8_t id){
 
 uint16_t unitToCommandId(const char *unit){
   for (uint8_t i = 0; i<3;i++){
-    if (strcmp(unit, UNITS[i]) == 0) return UNIT_COM + i;
+    if (strcmp(unit, UNITS[i]) == 0) {
+      SerialUSB.print("leido: "); SerialUSB.print(unit);
+      SerialUSB.print(" : "); SerialUSB.println(UNIT_COM + i);
+       return UNIT_COM + i;}
   }
   return 0;
 }
@@ -146,10 +149,10 @@ Message processCommand(uint8_t argc, char *argv[]) {
   if (cmd == HELP) {
     SerialUSB.println(F("Comandos disponibles:"));
     SerialUSB.println(F("us <HEX:0x--> one-shot"));
-    SerialUSB.println(F("us <HEX:0x--> on <INT:max 65535>"));
+    SerialUSB.println(F("us <HEX:0x--> on <INT:0-65535>"));
     SerialUSB.println(F("us <HEX:0x--> off"));
     SerialUSB.println(F("us <HEX:0x--> unit <LITERAL:inc|cm|ms>"));
-    SerialUSB.println(F("us <HEX:0x--> delay <INT:max 65535>"));
+    SerialUSB.println(F("us <HEX:0x--> delay <INT:0-65535>"));
     SerialUSB.println(F("us <HEX:0x--> status"));
     return empty_message;
   }
@@ -197,6 +200,7 @@ Message processCommand(uint8_t argc, char *argv[]) {
     else if (command_type.id == 4 && argc == 4) {
       if (unitToCommandId(argv[3]) != 0) {
         SerialUSB.print(F("Unit ")); SerialUSB.println(argv[3]);
+        command_type.id = unitToCommandId(argv[3]);
       } else {
         SerialUSB.println(F("Unidad invalida (use inc|cm|ms)"));
       }
