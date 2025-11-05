@@ -88,7 +88,7 @@ const Argument empty_arg = {"",0};
 
 char UNITS[3][4] = {"inc","cm","ms"}; //inches, centimeters, miliseconds
 
-uint16_t commadOffset(uint8_t id){
+uint16_t commadIdOffset(uint8_t id){
   return id<<4;
 }
 
@@ -171,7 +171,7 @@ Message processCommand(uint8_t argc, char *argv[]) {
     SerialUSB.println(parseHex(argv[1]), HEX);
     device = hexToDeviceId(parseHex(argv[1]));
     SerialUSB.println(device);
-    uint8_t code = commadOffset(command_type.id) + device;
+    uint8_t code = commadIdOffset(command_type.id) + device;
 
     // ---- Comandos secundarios ----
     for (uint8_t i =1; i<COM_NUM; i++){
@@ -217,7 +217,7 @@ Message processCommand(uint8_t argc, char *argv[]) {
 
   SerialUSB.println(command_type.id<<4, BIN);
   SerialUSB.println(device, HEX);
-  SerialUSB.print(commadOffset(command_type.id), HEX);SerialUSB.print(" ");SerialUSB.println(device, HEX);
+  SerialUSB.print(commadIdOffset(command_type.id), HEX);SerialUSB.print(" ");SerialUSB.println(device, HEX);
   SerialUSB.print(F("code for command+device: "));SerialUSB.print(code);SerialUSB.print(" HEX: ");SerialUSB.println(code, HEX);
   SerialUSB.print(F("from id: "));SerialUSB.print(code>>4);
   SerialUSB.print(F(" and dev: "));SerialUSB.println(DeviceIdToHex( code & DEV_MASC) , HEX);
