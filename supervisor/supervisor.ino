@@ -34,8 +34,16 @@ void loop()
 {
   Serial.println("******************* sending example *******************"); 
 
-  Serial.print("--> sending: "); Serial.println(static_cast<int>(counter)); 
-  Serial1.write(counter++);
+  
+  Message command = CLI();
+  if (!equalMessages(command, empty_message)){
+    SerialUSB.print("readed Message: code[");SerialUSB.print(command.code);SerialUSB.print("] param[");SerialUSB.print(command.param);SerialUSB.println("]");
+    Serial.print("--> sending: "); Serial.println(static_cast<int>(counter)); 
+    Serial1.write(counter++);
+  } else {
+    Serial.print("--> sending: "); Serial.println(static_cast<int>(counter)); 
+    Serial1.write(counter++);
+  }
 
   uint32_t last_ms=millis();
   while(millis()-last_ms<pseudo_period_ms) 
