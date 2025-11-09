@@ -1,3 +1,8 @@
+/* ======================================================================= *\
+*Entrega Practica 2
+*Alberto Martel Rodríguez
+*Santiago Galindo Peralta
+\* ======================================================================= */
 #include <ChRt.h>
 #include "message_protocol.h"
 #include "terminal.h"
@@ -42,7 +47,7 @@ void startPeriodic(Sensor *s, uint16_t period) {
 }
 
 void stopPeriodic(Sensor *s) {
-  if (s->thread) { chThdTerminate(s->thread); chThdWait(s->thread); s->thread=nullptr; }
+  if (s->thread) { chThdTerminate(s->thread); s->thread=nullptr; }
   s->cycle=false; s->period=0;
 }
 
