@@ -23,6 +23,7 @@ static inline Message unpackMsg(uint32_t w) {
 #define MBOX_DEPTH 8
 static mailbox_t mbox[N_SENSORS];
 static msg_t      mbox_buf[N_SENSORS][MBOX_DEPTH];
+MUTEX_DECL(i2c_lock);
 
 // ============================================================
 //   Hilo receptor (único lector de Serial1)
@@ -68,11 +69,30 @@ static THD_FUNCTION(sensorThread, arg) {
     if (chMBFetchTimeout(&mbox[idx], &packed, TIME_MS2I(100)) == MSG_OK) {
       Message cmd = unpackMsg((uint32_t)packed);
       uint8_t cmdId = cmd.code >> 4;
+      SerialUSB.print("RECEIVED: ");SerialUSB.print(cmdId);SerialUSB.print(":");SerialUSB.print(cmd.code & DEV_MASC, HEX);SerialUSB.print(":");SerialUSB.println(cmd.param);
       switch (cmdId){
         case 1:
           // Disparo de medida (unidad desde cmdId si 4..6, si no: cm)
-          cmd.param = srf02_oneShot(self->i2c_addr, cmd.param);
+          chMtxLock(&i2c_lock);
+          SerialUSB.print("executing shot on ");
+          SerialUSB.print(self->addr,HEX);
+          SerialUSB.print(":");
+          SerialUSB.println(self->i2c_addr,HEX);
+          srf02_oneShot(self->i2c_addr, cmd.param);
+          SerialUSB.println("waiting");
+          chThdSleepMilliseconds(100);
+          cmd.param = srf02_read_result(self->i2c_addr);
+          if (cmd.param == 0){
+            mask_error(WIRE_ERROR,cmd.code);
+          }
+          SerialUSB.print("sending reply: code=");
+          SerialUSB.print(cmd.code, HEX);
+          SerialUSB.print(" param=");
+          SerialUSB.println(cmd.param);
+          chMtxUnlock(&i2c_lock);
           sendMessage(Serial1, cmd);
+          SerialUSB.println("reply sent");
+
           chThdSleepMilliseconds(self->delay_ms);
           break;
         case 7: //delay
@@ -119,6 +139,7 @@ static void chSetup(void) {
 //   setup()/loop() (entrega control a ChibiOS)
 // ============================================================
 void setup() {
+  SerialUSB.begin(9600);
   Serial1.begin(9600);
   Wire.begin();
   chBegin(chSetup);

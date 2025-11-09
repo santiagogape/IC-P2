@@ -21,9 +21,20 @@ inline uint8_t srf02_readRegister(uint8_t address, uint8_t reg) {
   Wire.beginTransmission(address);
   Wire.write(reg);
   Wire.endTransmission();
-
+  SerialUSB.println("expecting");
   Wire.requestFrom(address, byte(1));
-  while (!Wire.available()) { /* espera activa corta */ }
+  SerialUSB.println("readed");
+  uint32_t t0 = millis();
+  while (!Wire.available()) {
+    if (millis() - t0 > 120) {  // timeout de 120 ms
+      SerialUSB.print(F("[ERROR] I2C read timeout addr=0x"));
+      SerialUSB.print(address, HEX);
+      SerialUSB.print(F(" reg=0x"));
+      SerialUSB.println(reg, HEX);
+      return 0x00;
+    }
+  }
+  SerialUSB.println("done");
   return Wire.read();
 }
 
@@ -38,7 +49,7 @@ inline uint8_t srf02_readRegister(uint8_t address, uint8_t reg) {
  * en terminal.ino  /supervisor se indica que 
  * las unidades se identifican por 4,5,6
  */
-uint16_t srf02_oneShot(uint8_t address, uint8_t unit) {
+void srf02_oneShot(uint8_t address, uint8_t unit) {
   uint8_t mode;
   switch (unit) {
     case 4: mode = REAL_RANGING_MODE_INCHES; break; // 
@@ -48,13 +59,17 @@ uint16_t srf02_oneShot(uint8_t address, uint8_t unit) {
   }
 
   srf02_writeCommand(address, mode);
-  delay(SRF02_RANGING_DELAY);
+}
 
+uint16_t srf02_read_result(uint8_t address) {
+  SerialUSB.println("high");
   uint8_t high = srf02_readRegister(address, RANGE_HIGH_BYTE);
+  SerialUSB.println("low");
   uint8_t low  = srf02_readRegister(address, RANGE_LOW_BYTE);
-
+  SerialUSB.print("one-shot: ");SerialUSB.print(address,HEX);SerialUSB.print(":");SerialUSB.println((uint16_t)((high<<8)|low));
   return (uint16_t)((high << 8) | low);
 }
+
 
 /**
  * Lee información de estado del SRF02.

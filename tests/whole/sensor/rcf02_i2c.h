@@ -44,7 +44,9 @@ inline uint8_t srf02_readRegister(uint8_t address, uint8_t reg);
  * en terminal.ino  /supervisor se indica que 
  * las unidades se identifican por 4,5,6
  */
-uint16_t srf02_oneShot(uint8_t address, uint8_t unit);
+ ;
+void srf02_oneShot(uint8_t address, uint8_t unit);
+uint16_t srf02_read_result(uint8_t address);
 
 /**
  * Lee información de estado del SRF02.

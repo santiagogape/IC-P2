@@ -4,6 +4,7 @@
 
 #define UNDER_MIN_DELAY     10
 #define SENSOR_DISCONECTED  11
+#define WIRE_ERROR 12
 
 inline uint8_t mask_error(uint8_t errorID, uint8_t code);
 

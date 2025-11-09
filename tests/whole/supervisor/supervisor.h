@@ -16,12 +16,12 @@ Sensor* findSensorByAddr(uint8_t addr);
 /*
   test:
   help
-  us 0xE0 status
+  us 0xE0 status //[STATUS] Sensor 0xE0 | unit=cm | period=0 | delay=70 | cycle=OFF
   us 0xE0 one-shot
   us 0xE0 on 1000
   us 0xE0 delay 200
   us 0xE0 status
   us 0xE0 off
-  us 0xE0 unit cm
+  us 0xE0 unit ms
   us 0xE0 one-shot
 */

@@ -45,10 +45,12 @@ bool receiveMessage(Stream &port, Message *outMsg, uint32_t timeout_ms = 100) {
     }
     if (got == sizeof(Message)) return true;
   }
+  /*
   SerialUSB.print(F("TIMEOUT: code="));
   SerialUSB.print(outMsg->code,HEX);
   SerialUSB.println(F(" param="));
   SerialUSB.println(outMsg->param);
+  */
   return false;
 }
 

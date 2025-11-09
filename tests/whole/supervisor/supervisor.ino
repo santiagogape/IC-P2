@@ -22,7 +22,7 @@ static THD_FUNCTION(sensorPeriodic, arg) {
       Message msg = {code, s->unit};
       sendMessage(Serial1, msg);
       Message resp = msg;
-      if (receiveMessage(Serial1, &resp, 100) && verifyReply(code, resp)) {
+      if (receiveMessage(Serial1, &resp, 1000) && verifyReply(code, resp)) {
         SerialUSB.print(F("[AUTO] 0x"));
         SerialUSB.print(s->addr, HEX);
         SerialUSB.print(F(" → "));
@@ -83,9 +83,11 @@ void loop() {
     // One-shot: dispara un único pulso y espera respuesta
     // ======================================================
     case 1: {
+      SerialUSB.print(F("[ONE-SHOT] unit="));
+        SerialUSB.println(cmd.param = s->unit);
       sendMessage(Serial1, cmd);
       Message reply = cmd;
-      if (receiveMessage(Serial1, &reply, 200) && verifyReply(cmd.code, reply)) {
+      if (receiveMessage(Serial1, &reply, 1000) && verifyReply(cmd.code, reply)) {
         SerialUSB.print(F("[ONE-SHOT] 0x"));
         SerialUSB.print(s->addr, HEX);
         SerialUSB.print(F(" → "));
@@ -106,7 +108,7 @@ void loop() {
       sendMessage(Serial1, delayCheck);
 
       Message reply = delayCheck;
-      if (receiveMessage(Serial1, &reply, 200) && verifyReply(check, reply)) {
+      if (receiveMessage(Serial1, &reply, 1000) && verifyReply(check, reply)) {
         if (cmd.param < 2 * reply.param) {
           SerialUSB.print(F("[WARN] Periodo menor a 2×delay no permitido. (addr=0x"));
           SerialUSB.print(devAddr, HEX);
@@ -149,7 +151,7 @@ void loop() {
     case 7: {
       sendMessage(Serial1, cmd);
       Message reply = cmd;
-      if (receiveMessage(Serial1, &reply, 200) && verifyReply(cmd.code, reply)) {
+      if (receiveMessage(Serial1, &reply, 1000) && verifyReply(cmd.code, reply)) {
         SerialUSB.print(F("[DELAY] Sensor 0x"));
         SerialUSB.print(s->addr, HEX);
         SerialUSB.print(F(" → nuevo delay="));
@@ -164,7 +166,7 @@ void loop() {
     case 8: {
       sendMessage(Serial1, cmd);
       Message reply = cmd;
-      if (receiveMessage(Serial1, &reply, 200) && verifyReply(cmd.code, reply)) {
+      if (receiveMessage(Serial1, &reply, 1000) && verifyReply(cmd.code, reply)) {
         SerialUSB.print(F("[STATUS] Sensor 0x"));
         SerialUSB.print(s->addr, HEX);
         SerialUSB.print(F(" | unit="));

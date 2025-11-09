@@ -40,10 +40,22 @@ bool receiveMessage(Stream &port, Message *outMsg, uint32_t timeout_ms = 100) {
   uint8_t *p = (uint8_t*)outMsg;
   size_t got = 0;
   while ((millis() - t0) < timeout_ms) {
+  //while (true){
     while (port.available() && got < sizeof(Message)) {
       p[got++] = (uint8_t)port.read();
     }
     if (got == sizeof(Message)) return true;
+    /*
+    else if ((millis() - t0) < timeout_ms) {
+      SerialUSB.print(F("TIMEOUT: code="));
+      SerialUSB.print(outMsg->code,HEX);
+      SerialUSB.print(F(" param="));
+      SerialUSB.print(outMsg->param);
+      SerialUSB.print(F(" at "));
+      SerialUSB.println(millis());
+    }
+    */
+    
   }
   SerialUSB.print(F("TIMEOUT: code="));
   SerialUSB.print(outMsg->code,HEX);
