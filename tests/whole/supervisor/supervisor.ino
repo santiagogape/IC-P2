@@ -60,7 +60,7 @@ void setup() {
   SerialUSB.begin(9600);
   Serial1.begin(9600);
   while (!SerialUSB) {}
-  sensors[0] = {false,0,0xE0,5,nullptr};
+  sensors[0] = {false,0,0xE2,5,nullptr};
   sensors[1] = {false,0,0xF2,5,nullptr};
   SerialUSB.println(F("Supervisor iniciado."));
   chBegin([](){});

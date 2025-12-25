@@ -75,6 +75,6 @@ typedef struct {
 
 #define N_SENSORS 2
 SensorConfig sensors[N_SENSORS] = {
-  {0xE0, byte(0xE0 >> 1), SRF02_RANGING_DELAY},
+  {0xE2, byte(0xE2 >> 1), SRF02_RANGING_DELAY},
   {0xF2, byte(0xF2 >> 1), SRF02_RANGING_DELAY}
 };
