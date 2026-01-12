@@ -1,7 +1,7 @@
 #include "printer.h"
 #include <Arduino.h>
 
-// Si defines HELP_MESSAGE solo en supervisor, hazlo aquí:
+
 const Message HELP_MESSAGE = {
   .flags  = 0,
   .cmd    = CMD_HELP,

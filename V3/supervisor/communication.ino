@@ -1,5 +1,5 @@
 #include "communication.h"
-#include <Arduino.h>   // for Serial1
+
 
 bool comm_send_message(const Message *msg, FrameTxContext *tx)
 {

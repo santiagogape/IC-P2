@@ -1,4 +1,4 @@
-#include <Arduino.h>
+
 #include <ChRt.h>
 
 #include "protocol.h"
@@ -271,7 +271,6 @@ static THD_FUNCTION(PeriodicThread, arg)
 
     SensorState snapshot;
 
-    // 1️⃣ Snapshot protegido
     chMtxLock(&sensors_mtx);
     SensorState *st = find_state(dir);
     if (!st) {
@@ -282,7 +281,6 @@ static THD_FUNCTION(PeriodicThread, arg)
     snapshot = *st;
     chMtxUnlock(&sensors_mtx);
 
-    // 2️⃣ Decisión lógica (sin mutex)
     if (!periodic_should_run(&snapshot)) {
       chThdSleepMilliseconds(50);
       continue;
@@ -295,11 +293,9 @@ static THD_FUNCTION(PeriodicThread, arg)
       continue;
     }
 
-    // 3️⃣ I2C sin mutex
     I2CJob job = { snapshot.dir, snapshot.unit };
     I2CResult res = srf02_execute_job(&job);
 
-    // 4️⃣ Actualizar estado REAL
     if (res.status == ERR_OK) {
       chMtxLock(&sensors_mtx);
       SensorState *st2 = find_state(dir);
@@ -307,7 +303,6 @@ static THD_FUNCTION(PeriodicThread, arg)
       chMtxUnlock(&sensors_mtx);
     }
 
-    // 5️⃣ Evento
     ExecResponse evt;
     periodic_handle_i2c_result(&res, &evt);
     sensor_post_exec_response(&evt);

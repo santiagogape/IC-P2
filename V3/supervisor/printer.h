@@ -12,7 +12,7 @@
 void printer_print_message(const Message *msg);
 void printer_print_help(void);
 
-// Decodifica payload de CMD_GET_STATUS → SensorStatus (DTO)
+// Decodifica payload de CMD_GET_STATUS => SensorStatus (DTO)
 // (SensorStatus lo añadiste tú en protocol.h)
 bool decode_status_payload(const Message *msg, SensorStatus *out);
 
