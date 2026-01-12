@@ -1,7 +1,6 @@
 #ifndef SRF02_I2C_H
 #define SRF02_I2C_H
 
-#include <Arduino.h>
 #include <Wire.h>
 #include "protocol.h"   // Unit, ErrorCode
 
